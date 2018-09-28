@@ -48,25 +48,44 @@ export class NumericalMonoid {
     }
 
     catenaryDegree(n: number): number {
-        throw new Error();
-        return 0;
+        const factorizations = this.factorizations(n);
+        for (let i = 0; ; i++) {
+            const g = cytoscape({});
+            factorizations.forEach(fac => g.add({ data: { id: JSON.stringify(fac) } }));    // first pass: add all nodes. can't add edges if one end isn't there yet
+            factorizations.forEach(fac1 => {
+                factorizations.forEach(fac2 => {
+                    if (JSON.stringify(fac2) == JSON.stringify(fac1)) return;
+                    const distance = this.distance(fac1, fac2);
+                    if (distance <= i) {
+                        g.add({ data: { source: JSON.stringify(fac1), target: JSON.stringify(fac2) } });
+                    }
+                })
+            });
+            if (g.elements().components().length == 1) {
+                return i;
+            }
+        }
     }
 
     maxnonreducibleEdges(n: number): number[][][] {
         // Returns the set of nonreducible edges that are maximal (i.e. d = catenary degree)
         const factorizations = this.factorizations(n);
         const catenaryDegree = this.catenaryDegree(n);
+        const vertices = factorizations.map(fac => ({ data: { id: JSON.stringify(fac) } }));
         const g = cytoscape({
-            elements: factorizations.map(fac => ({ id: JSON.stringify(fac) }))
+            elements: vertices
         }); // just vertices for now, edges next
         const maximalEdges = [];
         for (let fac1 of factorizations) {
             for (let fac2 of factorizations) {
+                if (JSON.stringify(fac2) == JSON.stringify(fac1)) continue;
                 const d = this.distance(fac1, fac2);
                 if (d < catenaryDegree) {
                     g.add({
-                        source: JSON.stringify(fac1),
-                        target: JSON.stringify(fac2)
+                        data: {
+                            source: JSON.stringify(fac1),
+                            target: JSON.stringify(fac2)
+                        }
                     });
                 } else if (d == catenaryDegree) {
                     maximalEdges.push([fac1, fac2]);
@@ -79,8 +98,8 @@ export class NumericalMonoid {
             // If this maximal edge is not reducible...
             if (!returnSet.has([fac2, fac1]) &&   // Make sure we don't have any reverse-order duplicates
             !g.elements().aStar({
-                root: JSON.stringify(fac1),
-                target: JSON.stringify(fac2)
+                root: g.nodes(`node[id="${JSON.stringify(fac1)}"]`),
+                goal: g.nodes(`node[id="${JSON.stringify(fac2)}"]`)
             }).found) {
                 returnSet.add([fac1, fac2]);
             }

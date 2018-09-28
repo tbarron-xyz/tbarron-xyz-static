@@ -45,6 +45,7 @@ window.onload = () => {
 const updateStateElement = (element: number) => {
     state.element = element;
     (<HTMLInputElement>document.getElementById('element-input')).value = element.toString();
+    (<HTMLInputElement>document.getElementById('catenary-input')).value = state.numericalMonoid.catenaryDegree(element).toString();
     renderPlotly();
 }
 
@@ -75,7 +76,7 @@ const moveUpOrDownByElement = (generatorIndex: number, up: boolean, currentEleme
 
 const renderPlotly = () => {
     const factorizations = state.numericalMonoid.factorizations(state.element);
-    var trace1 = {
+    const trace1 = {
         x: factorizations.map(x => x[0]),
         y: factorizations.map(x => x[1]),
         z: factorizations.map(x => x[2]),
@@ -90,7 +91,17 @@ const renderPlotly = () => {
         },
         type: 'scatter3d'
     };
-    var layout = {margin: {
+    const maxnonred = state.numericalMonoid.maxnonreducibleEdges(state.element);
+    const maxnonredTraces = maxnonred.map(pair => {
+        return {
+            x: pair.map(x => x[0]),
+            y: pair.map(x => x[1]),
+            z: pair.map(x => x[2]),
+            mode: 'lines',
+            type: 'scatter3d'
+        }
+    });
+    const layout = {margin: {
         l: 0,
         r: 0,
         b: 0,
@@ -101,5 +112,5 @@ const renderPlotly = () => {
     } catch (e) {
         0;
     }
-    Plotly.newPlot('plotly-container', [trace1], layout);
+    Plotly.newPlot('plotly-container', [trace1, ...maxnonredTraces], layout);
 }
