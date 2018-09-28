@@ -1,7 +1,7 @@
 import { JSONHashSet } from './Hash';
-import { zeroThroughN, addOneAtIndex } from './utils';
+import { zeroThroughN, addOneAtIndex, tupleMinus, tupleGCD, sum } from './utils';
 
-let cytoscape;
+declare var cytoscape;
 
 export class NumericalMonoid {
     generators: number[];
@@ -9,6 +9,7 @@ export class NumericalMonoid {
 
     constructor(generators: number[]) {
         this.generators = generators;
+        this.cachedFacs = new Map<number, number[][]>();
     }
 
     factorizations(n: number): number[][] {
@@ -19,6 +20,7 @@ export class NumericalMonoid {
         } else if (this.cachedFacs.has(n)) {
             return this.cachedFacs.get(n);
         } else {
+            console.log(n, this);
             const predecessorFactorizationsUpped = this.generators.map((generator, index) => {
                 return this.factorizations(n-generator).map(x => addOneAtIndex(x, index));
             });
@@ -34,8 +36,8 @@ export class NumericalMonoid {
 
     frobenius(): number {
         for (let n = 0; ; n++) {
-            if (zeroThroughN(Math.min(...this.generators)).every(x => this.factorizations(n+x).length == 0)) {
-                return n;
+            if (zeroThroughN(Math.min(...this.generators)).every(x => this.factorizations(n+x).length > 0)) {
+                return n-1;
             }
         }
     }
@@ -88,6 +90,7 @@ export class NumericalMonoid {
     }
 
     distance(fac1: number[], fac2: number[]): number {
-        throw new Error();
+        const gcd = tupleGCD(fac1, fac2);
+        return Math.max(sum(tupleMinus(fac1, gcd)), sum(tupleMinus(fac2, gcd)));
     }
 }

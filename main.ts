@@ -1,39 +1,51 @@
 import { NumericalMonoid } from './NumericalMonoid';
 
-let Plotly;
-let cytoscape;
+declare var Plotly;
 
 window.onload = () => {
     [1,2,3].map(x => getInput(x)).forEach(x => {
         x.onchange = updateGenerators;
     });
-    
+    document.getElementById('element-input').onchange = e => {
+        try {
+            updateStateElement(parseInt((<HTMLInputElement>e.target).value))
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
     document.onkeydown = (ev) => {
         switch (ev.key) {
             case 'a':
-                state.element = moveUpOrDownByElement(1, true, state.element);
-                break;
+            updateStateElement(moveUpOrDownByElement(1, true, state.element));
+            break;
             case 'z':
-                state.element = moveUpOrDownByElement(1, false, state.element);
-                break;
+            updateStateElement(moveUpOrDownByElement(1, false, state.element));
+            break;
             case 's':
-                state.element = moveUpOrDownByElement(2, true, state.element);
-                break;
+            updateStateElement(moveUpOrDownByElement(2, true, state.element));
+            break;
             case 'x':
-                state.element = moveUpOrDownByElement(2, false, state.element);
-                break;
+            updateStateElement(moveUpOrDownByElement(2, false, state.element));
+            break;
             case 'd':
-                state.element = moveUpOrDownByElement(3, true, state.element);
-                break;
+            updateStateElement(moveUpOrDownByElement(3, true, state.element));
+            break;
             case 'c':
-                state.element = moveUpOrDownByElement(3, false, state.element);
-                break;
+            updateStateElement(moveUpOrDownByElement(3, false, state.element));
+            break;
             default:
-                return;
+            return;
         }
-
-        updateGenerators();
     }
+
+    updateGenerators();
+}
+
+const updateStateElement = (element: number) => {
+    state.element = element;
+    (<HTMLInputElement>document.getElementById('element-input')).value = element.toString();
+    renderPlotly();
 }
 
 const state: {
@@ -52,7 +64,7 @@ const numericalMonoidOfCurrentInputs = () => new NumericalMonoid([getValueOfInpu
 
 const updateGenerators = () => {
     state.numericalMonoid = numericalMonoidOfCurrentInputs();
-    state.element = state.numericalMonoid.frobenius();
+    updateStateElement(state.numericalMonoid.frobenius() + 1);
 
     renderPlotly();
 }
