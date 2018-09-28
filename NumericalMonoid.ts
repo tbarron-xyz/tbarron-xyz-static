@@ -6,10 +6,12 @@ declare var cytoscape;
 export class NumericalMonoid {
     generators: number[];
     cachedFacs: Map<number, number[][]>;
+    cachedCatenaryDegrees: Map<number, number>;
 
     constructor(generators: number[]) {
         this.generators = generators;
         this.cachedFacs = new Map<number, number[][]>();
+        this.cachedCatenaryDegrees = new Map<number, number>();
     }
 
     factorizations(n: number): number[][] {
@@ -48,6 +50,7 @@ export class NumericalMonoid {
     }
 
     catenaryDegree(n: number): number {
+        if (this.cachedCatenaryDegrees.has(n)) return this.cachedCatenaryDegrees.get(n);
         const factorizations = this.factorizations(n);
         for (let i = 0; ; i++) {
             const g = cytoscape({});
@@ -62,6 +65,7 @@ export class NumericalMonoid {
                 })
             });
             if (g.elements().components().length == 1) {
+                this.cachedCatenaryDegrees.set(n, i);
                 return i;
             }
         }
