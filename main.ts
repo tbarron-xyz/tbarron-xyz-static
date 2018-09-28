@@ -4,6 +4,10 @@ let Plotly;
 let cytoscape;
 
 window.onload = () => {
+    [1,2,3].map(x => getInput(x)).forEach(x => {
+        x.onchange = updateGenerators;
+    });
+    
     document.onkeydown = (ev) => {
         switch (ev.key) {
             case 'a':
@@ -40,7 +44,9 @@ const state: {
     element: 0,
 };
 
-const getValueOfInput = (id: number) => parseInt((<HTMLInputElement>document.getElementById(`input${id}`)).value);
+const getInput = (id: number) => <HTMLInputElement>document.getElementById(`input${id}`);
+
+const getValueOfInput = (id: number) => parseInt(getInput(id).value);
 
 const numericalMonoidOfCurrentInputs = () => new NumericalMonoid([getValueOfInput(1), getValueOfInput(2), getValueOfInput(3)]);
 
