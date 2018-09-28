@@ -1,7 +1,7 @@
 import { JSONHashSet } from './Hash';
 import { zeroThroughN, addOneAtIndex } from './utils';
 
-class NumericalMonoid {
+export class NumericalMonoid {
     generators: number[];
     cachedFacs: Map<number, number[][]>;
 
@@ -64,7 +64,7 @@ class NumericalMonoid {
                 }
             }
         }
-        
+
         const returnSet = new JSONHashSet<number[][]>();
         for (let [fac1, fac2] of maximalEdges) {
             if (!g.has_path(fac1, fac2) && !returnSet.has([fac2, fac1])) {  // Make sure we don't have any reverse-order duplicates
