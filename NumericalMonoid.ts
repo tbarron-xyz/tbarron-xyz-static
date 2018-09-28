@@ -1,6 +1,8 @@
 import { JSONHashSet } from './Hash';
 import { zeroThroughN, addOneAtIndex } from './utils';
 
+let cytoscape;
+
 export class NumericalMonoid {
     generators: number[];
     cachedFacs: Map<number, number[][]>;
@@ -52,13 +54,18 @@ export class NumericalMonoid {
         // Returns the set of nonreducible edges that are maximal (i.e. d = catenary degree)
         const factorizations = this.factorizations(n);
         const catenaryDegree = this.catenaryDegree(n);
-        const g = new Graph();
+        const g = cytoscape({
+            elements: factorizations.map(fac => ({ id: JSON.stringify(fac) }))
+        }); // just vertices for now, edges next
         const maximalEdges = [];
         for (let fac1 of factorizations) {
             for (let fac2 of factorizations) {
                 const d = this.distance(fac1, fac2);
                 if (d < catenaryDegree) {
-                    g.add_edge(fac1, fac2);
+                    g.add({
+                        source: JSON.stringify(fac1),
+                        target: JSON.stringify(fac2)
+                    });
                 } else if (d == catenaryDegree) {
                     maximalEdges.push([fac1, fac2]);
                 }
@@ -67,7 +74,12 @@ export class NumericalMonoid {
 
         const returnSet = new JSONHashSet<number[][]>();
         for (let [fac1, fac2] of maximalEdges) {
-            if (!g.has_path(fac1, fac2) && !returnSet.has([fac2, fac1])) {  // Make sure we don't have any reverse-order duplicates
+            // If this maximal edge is not reducible...
+            if (!returnSet.has([fac2, fac1]) &&   // Make sure we don't have any reverse-order duplicates
+            !g.elements().aStar({
+                root: JSON.stringify(fac1),
+                target: JSON.stringify(fac2)
+            }).found) {
                 returnSet.add([fac1, fac2]);
             }
         }

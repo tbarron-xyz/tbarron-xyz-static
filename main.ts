@@ -1,5 +1,8 @@
 import { NumericalMonoid } from './NumericalMonoid';
 
+let Plotly;
+let cytoscape;
+
 window.onload = () => {
     document.onkeydown = (ev) => {
         switch (ev.key) {
