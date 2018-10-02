@@ -1,0 +1,23 @@
+{
+  "name": "numerical-monoid",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc --module system --outfile main.js --target es6  main.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tbarron-xyz/numerical-monoid.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tbarron-xyz/numerical-monoid/issues"
+  },
+  "homepage": "https://github.com/tbarron-xyz/numerical-monoid#readme",
+  "dependencies": {
+    "tsc": "^1.20150623.0"
+  }
+}
