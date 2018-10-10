@@ -1,9 +1,10 @@
 import { NumericalMonoid } from './NumericalMonoid';
+import { tupleGCD, flattenArray } from './utils';
 
 declare var Plotly;
 
 window.onload = () => {
-    [1,2,3].map(x => getInput(x)).forEach(x => {
+    [1, 2, 3].map(x => getInput(x)).forEach(x => {
         x.onchange = updateGenerators;
     });
     document.getElementById('element-input').onchange = e => {
@@ -13,29 +14,32 @@ window.onload = () => {
             console.error(e);
         }
     };
+    document.getElementById('euclidean-checkbox').onchange = e => {
+        updateEuclideanCheckbox(Boolean((<HTMLInputElement>e.target).value));
+    }
 
     document.onkeydown = (ev) => {
         switch (ev.key) {
             case 'a':
-            updateStateElement(moveUpOrDownByElement(1, true, state.element));
-            break;
+                updateStateElement(moveUpOrDownByElement(1, true, state.element));
+                break;
             case 'z':
-            updateStateElement(moveUpOrDownByElement(1, false, state.element));
-            break;
+                updateStateElement(moveUpOrDownByElement(1, false, state.element));
+                break;
             case 's':
-            updateStateElement(moveUpOrDownByElement(2, true, state.element));
-            break;
+                updateStateElement(moveUpOrDownByElement(2, true, state.element));
+                break;
             case 'x':
-            updateStateElement(moveUpOrDownByElement(2, false, state.element));
-            break;
+                updateStateElement(moveUpOrDownByElement(2, false, state.element));
+                break;
             case 'd':
-            updateStateElement(moveUpOrDownByElement(3, true, state.element));
-            break;
+                updateStateElement(moveUpOrDownByElement(3, true, state.element));
+                break;
             case 'c':
-            updateStateElement(moveUpOrDownByElement(3, false, state.element));
-            break;
+                updateStateElement(moveUpOrDownByElement(3, false, state.element));
+                break;
             default:
-            return;
+                return;
         }
     }
 
@@ -45,16 +49,26 @@ window.onload = () => {
 const updateStateElement = (element: number) => {
     state.element = element;
     (<HTMLInputElement>document.getElementById('element-input')).value = element.toString();
-    (<HTMLInputElement>document.getElementById('catenary-input')).value = state.numericalMonoid.catenaryDegree(element).toString();
+    (<HTMLInputElement>document.getElementById('catenary-input')).value = catenaryFunction(state.numericalMonoid, state.useEuclidean)(element).toString();
     renderPlotly();
 }
 
+const updateEuclideanCheckbox = (useEuclidean: boolean) => {
+    state.useEuclidean = useEuclidean;
+    renderPlotly();
+}
+
+const maxnonredFunction = (nm: NumericalMonoid, useEuclidean: boolean) => useEuclidean ? nm.maxnonreducibleEdgesEuclidean : nm.maxnonreducibleEdges;
+const catenaryFunction = (nm: NumericalMonoid, useEuclidean: boolean) => useEuclidean ? nm.catenaryDegree : nm.catenaryDegreeEuclidean;
+
 const state: {
     numericalMonoid: NumericalMonoid,
-    element: number
+    element: number,
+    useEuclidean: boolean
 } = {
     numericalMonoid: null,
     element: 0,
+    useEuclidean: false
 };
 
 const getInput = (id: number) => <HTMLInputElement>document.getElementById(`input${id}`);
@@ -91,26 +105,37 @@ const renderPlotly = () => {
         },
         type: 'scatter3d'
     };
-    const maxnonred = state.numericalMonoid.maxnonreducibleEdges(state.element);
+
+    const maxnonred = maxnonredFunction(state.numericalMonoid, state.useEuclidean)(state.element);
     const maxnonredTraces = maxnonred.map(pair => {
+        const pairWithMaybeGCDMidpoint = state.useEuclidean ? pair : [pair[0], tupleGCD(pair[0], pair[1]), pair[1]];
         return {
-            x: pair.map(x => x[0]),
-            y: pair.map(x => x[1]),
-            z: pair.map(x => x[2]),
+            x: pairWithMaybeGCDMidpoint.map(x => x[0]),
+            y: pairWithMaybeGCDMidpoint.map(x => x[1]),
+            z: pairWithMaybeGCDMidpoint.map(x => x[2]),
             mode: 'lines',
             type: 'scatter3d'
         }
     });
-    const layout = {margin: {
-        l: 0,
-        r: 0,
-        b: 0,
-        t: 0
-      }};
+    const arrayOfFactorizationComponents = flattenArray([0, 1, 2].map(x => factorizations.map(fac => fac[x])));
+    const globalAxisMax = Math.max(...arrayOfFactorizationComponents);
+    const axisLayout = { range: [0, globalAxisMax] };
+    const layout = {
+        margin: {
+            l: 0,
+            r: 0,
+            b: 0,
+            t: 0
+        },
+        xaxis: axisLayout,
+        yaxis: axisLayout,
+        zaxis: axisLayout
+    };
     try {
         Plotly.purge('plotly-container');
     } catch (e) {
         0;
     }
     Plotly.newPlot('plotly-container', [trace1, ...maxnonredTraces], layout);
+
 }

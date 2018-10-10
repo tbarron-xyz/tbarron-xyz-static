@@ -3,9 +3,11 @@ import { zeroThroughN, addOneAtIndex, tupleMinus, tupleGCD, sum, euclideanDistan
 
 declare var cytoscape;
 
+type Factorization = number[];
+
 export class NumericalMonoid {
     generators: number[];
-    cachedFacs: Map<number, number[][]>;
+    cachedFacs: Map<number, Factorization[]>;
     cachedCatenaryDegrees: Map<number, number>;
 
     constructor(generators: number[]) {
@@ -14,7 +16,7 @@ export class NumericalMonoid {
         this.cachedCatenaryDegrees = new Map<number, number>();
     }
 
-    factorizations(n: number): number[][] {
+    factorizations(n: number): Factorization[] {
         if (n < 0) {
             return [];
         } else if (n == 0) {
@@ -71,7 +73,7 @@ export class NumericalMonoid {
         }
     }
 
-    maxnonreducibleEdgesByMetric(n: number, metric: (fac1, fac2: number[]) => number): number[][][] {
+    maxnonreducibleEdgesByMetric(n: number, metric: (fac1, fac2: number[]) => number): Factorization[][] {
         // Returns the set of nonreducible edges that are maximal (i.e. d = catenary degree)
         const factorizations = this.factorizations(n);
         const catenaryDegree = this.catenaryDegreeByMetric(n, metric);
@@ -112,7 +114,9 @@ export class NumericalMonoid {
         return returnSet.toArray();
     }
 
-    catenaryDegreeByMetric(n: number, metric: (fac1, fac2: number[]) => number): number {
+    maxnonreducibleEdgesEuclidean = (n: number) => this.maxnonreducibleEdgesByMetric(n, euclideanDistance);
+
+    catenaryDegreeByMetric(n: number, metric: (fac1, fac2: Factorization) => number): number {
         const factorizations = this.factorizations(n);
         const pairwiseDistances = new Set<number>();
         factorizations.forEach(fac1 => {
@@ -141,7 +145,7 @@ export class NumericalMonoid {
 
     catenaryDegreeEuclidean = (x: number) => this.catenaryDegreeByMetric(x, euclideanDistance)
 
-    maxnonreducibleEdges(n: number): number[][][] {
+    maxnonreducibleEdges(n: number): Factorization[][] {
         // Returns the set of nonreducible edges that are maximal (i.e. d = catenary degree)
         const factorizations = this.factorizations(n);
         const catenaryDegree = this.catenaryDegree(n);
@@ -182,7 +186,7 @@ export class NumericalMonoid {
         return returnSet.toArray();
     }
 
-    distanceForClassicCatenary(fac1: number[], fac2: number[]): number {
+    distanceForClassicCatenary(fac1: Factorization, fac2: Factorization): number {
         const gcd = tupleGCD(fac1, fac2);
         return Math.max(sum(tupleMinus(fac1, gcd)), sum(tupleMinus(fac2, gcd)));
     }
