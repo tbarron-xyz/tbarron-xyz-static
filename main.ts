@@ -15,7 +15,7 @@ window.onload = () => {
         }
     };
     document.getElementById('euclidean-checkbox').onchange = e => {
-        updateEuclideanCheckbox(Boolean((<HTMLInputElement>e.target).value));
+        updateEuclideanCheckbox((<HTMLInputElement>e.target).checked);
     }
 
     document.onkeydown = (ev) => {
@@ -55,11 +55,11 @@ const updateStateElement = (element: number) => {
 
 const updateEuclideanCheckbox = (useEuclidean: boolean) => {
     state.useEuclidean = useEuclidean;
-    renderPlotly();
+    updateStateElement(state.element);
 }
 
-const maxnonredFunction = (nm: NumericalMonoid, useEuclidean: boolean) => useEuclidean ? nm.maxnonreducibleEdgesEuclidean : nm.maxnonreducibleEdges;
-const catenaryFunction = (nm: NumericalMonoid, useEuclidean: boolean) => useEuclidean ? nm.catenaryDegree : nm.catenaryDegreeEuclidean;
+const maxnonredFunction = (nm: NumericalMonoid, useEuclidean: boolean) => (useEuclidean ? nm.maxnonreducibleEdgesEuclidean : nm.maxnonreducibleEdges).bind(nm);
+const catenaryFunction = (nm: NumericalMonoid, useEuclidean: boolean) => (useEuclidean ? nm.catenaryDegreeEuclidean : nm.catenaryDegree).bind(nm);
 
 const state: {
     numericalMonoid: NumericalMonoid,
@@ -121,15 +121,21 @@ const renderPlotly = () => {
     const globalAxisMax = Math.max(...arrayOfFactorizationComponents);
     const axisLayout = { range: [0, globalAxisMax] };
     const layout = {
-        margin: {
-            l: 0,
-            r: 0,
-            b: 0,
-            t: 0
-        },
-        xaxis: axisLayout,
-        yaxis: axisLayout,
-        zaxis: axisLayout
+        scene: {
+            aspectmode: "manual",
+            aspectratio: {
+                x: 1, y: 1, z: 1,
+            },
+            margin: {
+                l: 0,
+                r: 0,
+                b: 0,
+                t: 0
+            },
+            xaxis: axisLayout,
+            yaxis: axisLayout,
+            zaxis: axisLayout
+        }
     };
     try {
         Plotly.purge('plotly-container');
