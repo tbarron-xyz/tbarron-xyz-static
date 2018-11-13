@@ -21,6 +21,7 @@ export default class NumericalMonoidCatenaryQuasiconstantBound {
     }
 }
 
-export const num = new NumericalMonoid([11, 34, 35]);
-console.log(num.bettiElements());
+export const num = new NumericalMonoid([11, 13, 14]);
+debugger;
+console.log(`Betti elements: ${num.bettiElements()}`);
 console.log(num.satisfiesCatenaryBoundHypothesis());

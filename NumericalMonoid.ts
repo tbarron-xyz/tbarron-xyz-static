@@ -14,6 +14,7 @@ export default class NumericalMonoid {
     generators: number[];
     cachedFacs: Map<number, Factorization[]>;
     cachedCatenaryDegrees: Map<number, number>;
+    cachedCatenaryDegreesByMetric: Map<Function, Map<number, number>>;
 
     calculatingNonMemoizedFactorizationCallback?: ((n: number) => void);
 
@@ -21,6 +22,7 @@ export default class NumericalMonoid {
         this.generators = generators;
         this.cachedFacs = new Map<number, number[][]>();
         this.cachedCatenaryDegrees = new Map<number, number>();
+        this.cachedCatenaryDegreesByMetric = new Map();
     }
 
     factorizations(n: number): Factorization[] {
@@ -196,17 +198,25 @@ export default class NumericalMonoid {
     maxnonreducibleEdgesEuclidean = (n: number) => this.maxnonreducibleEdgesByMetric(n, euclideanDistance);
 
     catenaryDegreeByMetric(n: number, metric: (fac1, fac2: Factorization) => number): number {
+        if (this.cachedCatenaryDegreesByMetric.has(metric)) {
+            const metricCache = this.cachedCatenaryDegreesByMetric.get(metric);
+            if (metricCache.has(n)) {
+                return metricCache.get(n);
+            }
+        }
         const factorizations = this.factorizations(n);
         const pairwiseDistancesPre = new Set<number>();
         factorizations.forEach(fac1 => {
             factorizations.forEach(fac2 => {
-                pairwiseDistancesPre.add(euclideanDistance(fac1, fac2));
+                pairwiseDistancesPre.add(metric(fac1, fac2));
             });
         });
         const bettis = this.bettiElements();
-        // only include distances less than max distance betti element
+        const bettiDistances = bettis.includes(n) ? [Infinity] : bettis.map(x => this.catenaryDegreeByMetric(x, metric));
+        // only include distances less than the max catenary degree of a betti element,
+        // except in the case above where the n is a betti element, in which case we compare with Infinity to safely include all edges and not get recursive calculation
         const pairwiseDistances = Array.from(pairwiseDistancesPre)
-            .filter(x => x > Math.max(...bettis) ? x <= Math.max(...this.bettiElements().map(b => this.catenaryDegreeByMetric(b, metric))) : true)
+            .filter(x => x <= Math.max(...bettiDistances))
             .sort((a, b) => b - a);
         for (let pairDistance of pairwiseDistances) {
             const g = cytoscape({});
@@ -221,7 +231,8 @@ export default class NumericalMonoid {
                 })
             });
             if (g.elements().components().length == 1) {
-                this.cachedCatenaryDegrees.set(n, pairDistance);
+                const metricCache = (this.cachedCatenaryDegreesByMetric.get(metric) || this.cachedCatenaryDegreesByMetric.set(metric, new Map()).get(metric));
+                metricCache.set(n, pairDistance);
                 return pairDistance;
             }
         }
@@ -280,14 +291,17 @@ export default class NumericalMonoid {
         const boundHypothsis = this.frobenius() + Math.max(...this.bettiElements());
         console.log('boundHypothesis:', boundHypothsis, 'lcm:', lcm);
         const v1 = this.catenaryDegreeEuclidean(boundHypothsis);
-        console.log('v1:', v1);
+        console.log(`catenaryDegree(${boundHypothsis}):`, v1);
         console.log('init');
         for (let i = 0; i < product(this.generators.slice(1)); i++) {
             // preload
             const next = boundHypothsis + this.generators[0] * i;
-            process.stdout.clearLine();
-            process.stdout.cursorTo(0);
-            process.stdout.write(next.toString());
+            const unsafeStdout = process.stdout as any;
+            if (unsafeStdout.clearLine) {
+                unsafeStdout.clearLine();
+                unsafeStdout.cursorTo(0);
+                process.stdout.write(`memoizing factorizations(${next})`);
+            }
 
             this.factorizations(next);
         }
