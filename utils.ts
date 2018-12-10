@@ -1,4 +1,4 @@
-export const zeroThroughN = (n) => Array.from(Array(n).keys());
+export const zeroThroughN = (n: number) => Array.from(Array(n).keys());
 
 export const addOneAtIndex = (array: number[], index: number) => {
     const array2 = array.slice();
