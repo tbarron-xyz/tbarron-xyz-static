@@ -8,7 +8,7 @@ import mat3 from './lib/tsm/src/mat3';
 import mat2 from './lib/tsm/src/mat2';
 
 // / <reference path="kruskal.d.ts" />
-import kruskal from 'kruskal';
+import { Kruskal } from './lib/kruskal';
 
 
 type Factorization = number[];
@@ -148,7 +148,7 @@ export default class NumericalMonoid {
         });
     }
 
-    catenaryDegree(n: number): number {
+    _non_dynamic_catenaryDegree(n: number): number {
         if (this.cachedCatenaryDegrees.has(n)) return this.cachedCatenaryDegrees.get(n);
         const factorizations = this.factorizations(n);
         for (let i = 0; ; i++) {
@@ -170,10 +170,10 @@ export default class NumericalMonoid {
         }
     }
 
-    maxnonreducibleEdgesByMetric(n: number, metric: Metric): Factorization[][] {
+    _non_dynamic_maxnonreducibleEdgesByMetric(n: number, metric: Metric): Factorization[][] {
         // Returns the set of nonreducible edges that are maximal (i.e. d = catenary degree)
         const factorizations = this.factorizations(n);
-        const catenaryDegree = this.catenaryDegreeByMetric(n, metric);
+        const catenaryDegree = this._non_dynamic_catenaryDegreeByMetric(n, metric);
         const vertices = factorizations.map(fac => ({ data: { id: JSON.stringify(fac) } }));
         const g = cytoscape({
             elements: vertices
@@ -211,9 +211,9 @@ export default class NumericalMonoid {
         return returnSet.toArray();
     }
 
-    maxnonreducibleEdgesEuclidean = (n: number) => this.maxnonreducibleEdgesByMetric(n, euclideanDistance);
+    maxnonreducibleEdgesEuclidean = (n: number) => this._non_dynamic_maxnonreducibleEdgesByMetric(n, euclideanDistance);
 
-    catenaryDegreeByMetric(n: number, metric: Metric): number {
+    _non_dynamic_catenaryDegreeByMetric(n: number, metric: Metric): number {
         if (this.cachedCatenaryDegreesByMetric.has(metric)) {
             const metricCache = this.cachedCatenaryDegreesByMetric.get(metric);
             if (metricCache.has(n)) {
@@ -221,7 +221,7 @@ export default class NumericalMonoid {
             }
         }
         const bettis = this.bettiElements();
-        const bettiDistances = bettis.includes(n) ? [Infinity] : bettis.map(x => this.catenaryDegreeByMetric(x, metric));
+        const bettiDistances = bettis.includes(n) ? [Infinity] : bettis.map(x => this._non_dynamic_catenaryDegreeByMetric(x, metric));
         const factorizations = this.factorizations(n);
         const pairwiseDistancesLessThanMaxBettiElement = new Set();
         factorizations.forEach(fac1 => {
@@ -258,6 +258,7 @@ export default class NumericalMonoid {
 
     minimalSpanningTreeByMetric(n: number, metric: Metric): [number, number][] {
         // Returns a list of pairs of indices pointing to factorizations within this.factorizations
+        // Is dynamic
         if (this.cachedMSTsByMetric.has(metric)) {
             const metricCache = this.cachedMSTsByMetric.get(metric);
             if (metricCache.has(n)) {
@@ -294,7 +295,7 @@ export default class NumericalMonoid {
                 .reduce((a, b) => a.concat(b), []);
         }
         const vertices = zeroThroughN(factorizations.length);
-        const mstAsIndexPairs = kruskal.kruskal(vertices, edges, (index1, index2) => metric(factorizations[index1], factorizations[index2]));
+        const mstAsIndexPairs = Kruskal.kruskal(vertices, edges, (index1, index2) => metric(factorizations[index1], factorizations[index2]));
         const metricCache = (this.cachedMSTsByMetric.get(metric) || this.cachedMSTsByMetric.set(metric, new Map()).get(metric));
         metricCache.set(n, mstAsIndexPairs);
         return mstAsIndexPairs;
@@ -302,17 +303,24 @@ export default class NumericalMonoid {
 
     }
 
-    catenaryDegreeByMetricDynamic(n: number, metric: Metric): number {
+    catenaryDegreeByMetric(n: number, metric: Metric): number {
         const mst = this.minimalSpanningTreeByMetric(n, metric);
-        return
+        const factorizations = this.factorizations(n);
+        return Math.max(...mst.map(([index1, index2]) => metric(factorizations[index1], factorizations[index2])));
     }
 
-    catenaryDegreeEuclidean = (x: number) => this.catenaryDegreeByMetric(x, euclideanDistance)
+    percent_of_edges_that_are_minimal(n: number, metric: Metric): number {
+        const mst = this.minimalSpanningTreeByMetric(n, metric);
+        const factorizations = this.factorizations(n);
+        const distances = mst.map(([index1, index2]) => metric(factorizations[index1], factorizations[index2]));
+        const min = Math.min(...distances);
+        return distances.filter(x => x === min).length / distances.length;
+    }
 
-    maxnonreducibleEdges(n: number): Factorization[][] {
+    _non_dynamic_maxnonreducibleEdges(n: number): Factorization[][] {
         // Returns the set of nonreducible edges that are maximal (i.e. d = catenary degree)
         const factorizations = this.factorizations(n);
-        const catenaryDegree = this.catenaryDegree(n);
+        const catenaryDegree = this._non_dynamic_catenaryDegree(n);
         const vertices = factorizations.map(fac => ({ data: { id: JSON.stringify(fac) } }));
         const g = cytoscape({
             elements: vertices
@@ -355,11 +363,11 @@ export default class NumericalMonoid {
         return Math.max(sum(tupleMinus(fac1, gcd)), sum(tupleMinus(fac2, gcd)));
     }
 
-    satisfiesCatenaryBoundHypothesis(metric: Metric) {
+    _satisfiesCatenaryBoundHypothesis(metric: Metric) {
         const lcm = product(this.generators);
         const boundHypothesis = this.frobenius() + Math.max(...this.bettiElements());
         console.log('boundHypothesis:', boundHypothesis, 'lcm:', lcm);
-        const v1 = this.catenaryDegreeByMetric(boundHypothesis, metric);
+        const v1 = this._non_dynamic_catenaryDegreeByMetric(boundHypothesis, metric);
         console.log(`catenaryDegree(${boundHypothesis}):`, v1);
         console.log(`calculating catenaryDegree(${boundHypothesis + lcm})`);
         for (let i = 0; i < product(this.generators.slice(1)); i++) {
@@ -375,11 +383,11 @@ export default class NumericalMonoid {
             this.factorizations(next);
         }
         const facsup = this.factorizations(boundHypothesis + lcm);
-        const v2 = this.catenaryDegreeByMetric(boundHypothesis + lcm, metric);
+        const v2 = this._non_dynamic_catenaryDegreeByMetric(boundHypothesis + lcm, metric);
         console.log(`catenaryDegree(${boundHypothesis + lcm}): ${v2}`);
         return v1 === v2;
     }
 
-    satisfiesCatenaryBoundHypothesisEuclidean = () => this.satisfiesCatenaryBoundHypothesis(euclideanDistance);
+    _satisfiesCatenaryBoundHypothesisEuclidean = () => this._satisfiesCatenaryBoundHypothesis(euclideanDistance);
 }
 

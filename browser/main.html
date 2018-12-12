@@ -5,7 +5,12 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/0.21.4/system-production.js"></script>
         <script src="./main.js"></script>
         <script>
-            System.import('main');
+            System.config({
+                map: {
+                    cytoscape: 'https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.2.16/cytoscape.min.js',
+                }
+            })
+            System.import('browser/main');
         </script>
     </head>
 

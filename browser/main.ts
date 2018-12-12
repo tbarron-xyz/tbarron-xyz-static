@@ -1,5 +1,5 @@
 import NumericalMonoid from '../NumericalMonoid';
-import { tupleGCD, flattenArray } from '../utils';
+import { tupleGCD, flattenArray, euclideanDistance } from '../utils';
 
 declare var Plotly;
 
@@ -58,8 +58,11 @@ const updateEuclideanCheckbox = (useEuclidean: boolean) => {
     updateStateElement(state.element);
 }
 
-const maxnonredFunction = (nm: NumericalMonoid, useEuclidean: boolean) => (useEuclidean ? nm.maxnonreducibleEdgesEuclidean : nm.maxnonreducibleEdges).bind(nm);
-const catenaryFunction = (nm: NumericalMonoid, useEuclidean: boolean) => (useEuclidean ? nm.catenaryDegreeEuclidean : nm.catenaryDegree).bind(nm);
+// const maxnonredFunction = (nm: NumericalMonoid, useEuclidean: boolean) => (useEuclidean ? nm.maxnonreducibleEdgesEuclidean : nm.maxnonreducibleEdges).bind(nm);
+const catenaryFunction = (nm: NumericalMonoid, useEuclidean: boolean) =>
+    (x: number) =>
+        nm.catenaryDegreeByMetric(x, metricFunction(useEuclidean));
+const metricFunction = (useEuclidean: boolean) => useEuclidean ? euclideanDistance : NumericalMonoid.distanceForClassicCatenary;
 
 const state: {
     numericalMonoid: NumericalMonoid,
@@ -106,17 +109,40 @@ const renderPlotly = () => {
         type: 'scatter3d'
     };
 
-    const maxnonred = maxnonredFunction(state.numericalMonoid, state.useEuclidean)(state.element);
-    const maxnonredTraces = maxnonred.map(pair => {
-        const pairWithMaybeGCDMidpoint = state.useEuclidean ? pair : [pair[0], tupleGCD(pair[0], pair[1]), pair[1]];
-        return {
-            x: pairWithMaybeGCDMidpoint.map(x => x[0]),
-            y: pairWithMaybeGCDMidpoint.map(x => x[1]),
-            z: pairWithMaybeGCDMidpoint.map(x => x[2]),
-            mode: 'lines',
-            type: 'scatter3d'
-        }
-    });
+    // const maxnonred = maxnonredFunction(state.numericalMonoid, state.useEuclidean)(state.element);
+    const maxnonredTraces =
+        [];
+    // maxnonred.map(pair => {
+    //     const pairWithMaybeGCDMidpoint = state.useEuclidean ? pair : [pair[0], tupleGCD(pair[0], pair[1]), pair[1]];
+    //     return {
+    //         x: pairWithMaybeGCDMidpoint.map(x => x[0]),
+    //         y: pairWithMaybeGCDMidpoint.map(x => x[1]),
+    //         z: pairWithMaybeGCDMidpoint.map(x => x[2]),
+    //         mode: 'lines',
+    //         type: 'scatter3d'
+    //     }
+    // });
+
+    const metric = metricFunction(state.useEuclidean);
+    const MST = state.numericalMonoid.minimalSpanningTreeByMetric(state.element, metric);
+    const distances = MST.map(([index1, index2]) => metric(factorizations[index1], factorizations[index2]));
+    const minDistance = Math.min(...distances);
+    const minEdges = MST;//.filter((pair, index) => distances[index] === minDistance);
+    const minimalMSTTraces = minEdges.map((indexPair) => ({
+        x: indexPair.map(x => factorizations[x][0]),
+        y: indexPair.map(x => factorizations[x][1]),
+        z: indexPair.map(x => factorizations[x][2]),
+        mode: 'lines',
+        // marker: {
+        //     size: 12,
+        //     line: {
+        //         color: 'rgba(217, 217, 217, 0.14)',
+        //         width: 0.5
+        //     },
+        //     opacity: 0.8
+        // },
+        type: 'scatter3d'
+    }));
     const arrayOfFactorizationComponents = flattenArray([0, 1, 2].map(x => factorizations.map(fac => fac[x])));
     const globalAxisMax = Math.max(...arrayOfFactorizationComponents);
     const axisLayout = { range: [0, globalAxisMax] };
@@ -142,6 +168,6 @@ const renderPlotly = () => {
     } catch (e) {
         0;
     }
-    Plotly.newPlot('plotly-container', [trace1, ...maxnonredTraces], layout);
+    Plotly.newPlot('plotly-container', [trace1, ...maxnonredTraces, ...minimalMSTTraces], layout);
 
 }
