@@ -18,25 +18,26 @@ window.onload = () => {
         updateEuclideanCheckbox((<HTMLInputElement>e.target).checked);
     }
 
+    const usemuodbe = (x: number, b: boolean) => updateStateElement(moveUpOrDownByElement(x, b, state.element));
     document.onkeydown = (ev) => {
         switch (ev.key) {
             case 'a':
-                updateStateElement(moveUpOrDownByElement(1, true, state.element));
+                usemuodbe(1, true);
                 break;
             case 'z':
-                updateStateElement(moveUpOrDownByElement(1, false, state.element));
+                usemuodbe(1, false);
                 break;
             case 's':
-                updateStateElement(moveUpOrDownByElement(2, true, state.element));
+                usemuodbe(2, true);
                 break;
             case 'x':
-                updateStateElement(moveUpOrDownByElement(2, false, state.element));
+                usemuodbe(2, false);
                 break;
             case 'd':
-                updateStateElement(moveUpOrDownByElement(3, true, state.element));
+                usemuodbe(3, true);
                 break;
             case 'c':
-                updateStateElement(moveUpOrDownByElement(3, false, state.element));
+                usemuodbe(3, false);
                 break;
             default:
                 return;
@@ -99,7 +100,7 @@ const renderPlotly = () => {
         z: factorizations.map(x => x[2]),
         mode: 'markers',
         marker: {
-            size: 12,
+            size: 5,
             line: {
                 color: 'rgba(217, 217, 217, 0.14)',
                 width: 0.5
