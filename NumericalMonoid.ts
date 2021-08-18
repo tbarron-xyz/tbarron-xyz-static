@@ -11,7 +11,7 @@ import mat2 from './lib/tsm/src/mat2';
 import { Kruskal } from './lib/kruskal';
 
 
-type Factorization = number[];
+export type Factorization = number[];
 type Metric = ((a: Factorization, b: Factorization) => number);
 type MST = [number, number][];    // expressed as indexes in this.factorizations(n) which has a fixed order
 
