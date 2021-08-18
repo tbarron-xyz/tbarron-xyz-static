@@ -87,7 +87,8 @@ const numericalMonoidOfCurrentInputs = () => new NumericalMonoid([getValueOfInpu
 
 const updateGenerators = () => {
     state.numericalMonoid = numericalMonoidOfCurrentInputs();
-    updateStateElement(state.numericalMonoid.frobenius() + 1);
+    // updateStateElement(state.numericalMonoid.frobenius() + 1);
+    updateStateElement(state.numericalMonoid._catenaryBoundHypothesis());
 
     renderPlotly();
 }
@@ -117,13 +118,16 @@ const facsMap = (factorizations, color) => {
 const colorMap = i => i == 0 ? "red" : i == 1 ? "blue" : "green";
 
 const upByLcmOverG = (i, lcm, g) => (z, j) => j == i ? (z + lcm / g) : z;
+const upByG = (i, lcm, g) => (z, j) => z + g;
 
 const renderPlotly = (explode = false) => {
     let trace1 = {}, trace2 = {}, trace3 = {};
     if (explode) {
         const factorizations = state.numericalMonoid.factorizations(state.element);
         const lcm = product(state.numericalMonoid.generators);
-        const exploded: Factorization[][] = state.numericalMonoid.generators.map((g, i) => factorizations.map(y => y.map(upByLcmOverG(i, lcm, g))));   // make 3 sets, each exploded upward in the ith direction
+        const exploded: Factorization[][] = state.numericalMonoid.generators.map((g, i) =>
+            factorizations.map(y => y.map(
+                upByLcmOverG(i, lcm, g))));   // make 3 sets, each exploded upward in the ith direction
         [trace1, trace2, trace3] = exploded.map((x, i) => facsMap(x, colorMap(i)));
         const maxnonredTraces = [];
         const metric = metricFunction(state.useEuclidean);
@@ -135,9 +139,9 @@ const renderPlotly = (explode = false) => {
         let aggregateGlobalAxisMax = 0;
         exploded.forEach((explodee, i) => {
             minimalMSTTraces = minimalMSTTraces.concat(minEdges.map((indexPair) => ({
-                x: indexPair.map(x => explodee[x][0] + i == 0 ? lcm / state.numericalMonoid.generators[i]: 0),
-                y: indexPair.map(x => explodee[x][1]+ i == 1 ? lcm / state.numericalMonoid.generators[i]: 0),
-                z: indexPair.map(x => explodee[x][2]+ i == 2 ? lcm / state.numericalMonoid.generators[i]: 0),
+                x: indexPair.map(x => explodee[x][0]),
+                y: indexPair.map(x => explodee[x][1]),
+                z: indexPair.map(x => explodee[x][2]),
                 mode: 'lines',
                 marker: {
                     size: 11,
@@ -242,6 +246,6 @@ const renderPlotly = (explode = false) => {
         } catch (e) {
             0;
         }
-        Plotly.newPlot('plotly-container', [trace1, trace2, trace3, ...maxnonredTraces, ...minimalMSTTraces], layout);
+        Plotly.newPlot('plotly-container', [trace1, ...maxnonredTraces, ...minimalMSTTraces], layout);
     }
 }

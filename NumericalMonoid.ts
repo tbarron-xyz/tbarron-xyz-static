@@ -363,6 +363,8 @@ export default class NumericalMonoid {
         return Math.max(sum(tupleMinus(fac1, gcd)), sum(tupleMinus(fac2, gcd)));
     }
 
+    _catenaryBoundHypothesis = () => this.frobenius() + Math.max(...this.bettiElements());
+
     _satisfiesCatenaryBoundHypothesis(metric: Metric) {
         const lcm = product(this.generators);
         const boundHypothesis = this.frobenius() + Math.max(...this.bettiElements());
