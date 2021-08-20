@@ -5,4 +5,5 @@ import { tupleGCD, flattenArray, euclideanDistance, product } from '../utils';
 declare var Plotly;
 
 window.onload = () => {
+    console.log('done loading');
 }
