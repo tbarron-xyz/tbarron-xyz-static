@@ -1,0 +1,121 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="">
+	<meta name="author" content="">
+	<link rel="icon" href="/static/favicon.ico">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+	<title>Thomas Barron</title>
+	<link rel="stylesheet" href="/static/Serif/cmun-serif.css">
+	<link rel="stylesheet" href="/static/Sans/cmun-sans.css">
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+			font-family: 'Computer Modern Sans';
+		}
+
+		h1 {
+			margin: 0px auto;
+			font-family: 'Computer Modern Serif';
+		}
+
+		hr {
+			border-top: 1px solid #666;
+		}
+
+		body {
+			font: 18px Helvetica, Arial;
+			background: #ddd;
+			padding: 20px;
+		}
+
+		#container {
+			width: 100%;
+			max-width: 800px;
+			margin: 50px auto;
+			top: 10%;
+		}
+
+		.inline {
+			display: inline;
+		}
+
+		ol,
+		li {
+			margin: 0;
+			padding: 0;
+		}
+
+		ol {
+
+			display: table;
+		}
+
+		ol li {
+			list-style: none;
+			counter-increment: foo -1;
+			display: table-row;
+		}
+
+		ol li::before {
+			content: counter(foo) ".";
+			display: table-cell;
+			text-align: right;
+			padding-right: .3em;
+		}
+
+		ul {
+			display: table;
+		}
+
+		ul li {
+			list-style: none;
+			display: table-row;
+		}
+
+		ul li::before {
+			content: "•";
+			display: table-cell;
+			text-align: right;
+			padding-right: .7em;
+		}
+	</style>
+	<script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+	<script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"
+		integrity="sha256-xNjb53/rY+WmG+4L6tTl9m6PpqknWZvRt0rO1SRnJzw=" crossorigin="anonymous"></script>
+		<script src="./main.js"></script>
+        <script>
+            System.config({
+                map: {
+                    cytoscape: 'https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.2.16/cytoscape.min.js',
+                }
+            })
+            System.import('browser/main');
+        </script>
+</head>
+
+<body>
+	<div id="container">
+		<div style="text-align: center">
+			<h1>Thomas Barron</h1>
+			<div>t @ tbarron<img
+					src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Full_stop.svg/150px-Full_stop.svg.png"
+					height="18px" />xyz</div>
+		</div>
+		<hr />
+		<div style="text-align: center">
+			<h1><a href="./static/Barron_resume.pdf">resume</a>
+				<h1>
+		</div>
+		<div style="text-align: center"><h1><a href="./numerical-monoid/browser/main.html">numerical monoid visualizer</a><h1></div>
+
+	</div>
+</body>
+
+</html>

@@ -1,0 +1,41 @@
+<html>
+    <head>
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.2.16/cytoscape.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/0.21.4/system-production.js"></script>
+        <script src="./main.js"></script>
+        <script>
+            System.config({
+                map: {
+                    cytoscape: 'https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.2.16/cytoscape.min.js',
+                }
+            })
+            System.import('browser/main');
+        </script>
+    </head>
+
+    <body>
+        <div>
+            Generators
+            <input type="text" id="input1" value="9" />
+            <input type="text" id="input2" value="40" />
+            <input type="text" id="input3" value="47" />
+        </div>
+        <div>
+            Element
+            <input type="text" id="element-input" />
+            Catenary degree: <input disabled type="text" id="catenary-input" />
+        </div>
+        <div>
+            <input type="checkbox" id="euclidean-checkbox" /> Use Euclidean (checked) vs classical (unchecked)
+            <br/>
+            <input type="button" id="explode-button">Explode</input>
+        </div>
+        <div>
+            Controls: a/z, s/x, d/c = up/down by generator 1, 2, 3
+        </div>
+        <div style="width: 100%; height: 80%;" id="plotly-container">
+        
+        </div>
+    </body>
+</html>
